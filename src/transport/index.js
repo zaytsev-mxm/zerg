@@ -1,11 +1,9 @@
-'use strict';
+import consoleNode from './consoleNode';
+import consoleBrowser from './consoleBrowser';
 
-var consoleNode = require('./consoleNode');
-var consoleBrowser = require('./consoleBrowser');
-
-var console = consoleNode;
+let console = consoleNode;
 if (typeof window !== 'undefined') {
     console = consoleBrowser;
 }
 
-module.exports = {console: console};
+export default { console };

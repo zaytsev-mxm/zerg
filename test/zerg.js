@@ -1,5 +1,3 @@
-'use strict';
-
 /* eslint
     no-console: "off",
     no-unused-expressions: "off",
@@ -15,7 +13,7 @@ var expect = require('chai').expect;
 var it = require('mocha').it;
 var sinon = require('sinon');
 var sinonChai = require('sinon-chai');
-var zerg = require('../src/index.js');
+var zerg = require('../lib/index.js');
 
 chai.use(sinonChai);
 

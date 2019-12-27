@@ -1,7 +1,6 @@
 /* eslint no-console: "off" */
-'use strict';
 
-var styles = {
+const styles = {
     verbose: 'color: gray; font-weight: bold;',
     debug: 'color: cornflowerblue; font-weight: bold;',
     info: 'color: green; font-weight: bold;',
@@ -15,11 +14,11 @@ var styles = {
  * @param {LogObject} logObject - {@link LogObject}
  * @returns {undefined}
  */
-var handler = function(logObject) {
-    var messageString = '%c[' + logObject.name + ']%c ' + logObject.message;
-    var args = [messageString, styles[logObject.level], styles.reset].concat(logObject.arguments);
+const handler = function(logObject) {
+    const messageString = '%c[' + logObject.name + ']%c ' + logObject.message;
+    const args = [messageString, styles[logObject.level], styles.reset].concat(logObject.arguments);
 
     console.log.apply(console, args);
-}
+};
 
-module.exports = handler;
+export default handler;

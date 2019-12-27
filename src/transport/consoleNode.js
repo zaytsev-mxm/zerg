@@ -1,8 +1,6 @@
-'use strict';
-
 /* eslint no-console: "off" */
 
-var codes = {
+const codes = {
     reset: [0, 0],
     cyan: [36, 39],
     red: [31, 39],
@@ -11,11 +9,11 @@ var codes = {
     gray: [90, 39]
 };
 
-var styles = {};
+const styles = {};
 
 Object.keys(codes).forEach(function (key) {
-    var open = '\u001b[' + codes[key][0] + 'm';
-    var close = '\u001b[' + codes[key][1] + 'm';
+    const open = '\u001b[' + codes[key][0] + 'm';
+    const close = '\u001b[' + codes[key][1] + 'm';
 
     styles[key] = (function (open, close) {
         return function (string) {
@@ -24,7 +22,7 @@ Object.keys(codes).forEach(function (key) {
     })(open, close);
 });
 
-var map = {
+const map = {
     verbose: styles.gray,
     debug: styles.cyan,
     error: styles.red,
@@ -36,14 +34,14 @@ var map = {
  * @param {LogObject} logObject - Object of log event
  * @return {void}
  */
-var handler = function (logObject) {
-    var style = map[logObject.level];
-    var message = style('[' + logObject.name + ']') + ' ' + logObject.message;
-    var args = [message].concat(logObject.arguments);
+const handler = function (logObject) {
+    const style = map[logObject.level];
+    const message = style('[' + logObject.name + ']') + ' ' + logObject.message;
+    const args = [message].concat(logObject.arguments);
     console.log.apply(console, args);
 };
 
 handler.styles = styles;
 handler.codes = codes;
 
-module.exports = handler;
+export default handler;

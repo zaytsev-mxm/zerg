@@ -1,29 +1,5 @@
-'use strict';
-
-var LOG_LEVELS = require('./util').LOG_LEVELS;
-
-/**
- * @type {Zerg}
- */
-var zergInstance = null;
-
-/**
- * @type {Object.<string, Module>}
- * @private
- */
-var __modules = {};
-
-/**
- * @type {Array.<Object>}
- * @private
- */
-var __transports = [];
-
-/**
- * @type {Array}
- * @private
- */
-var __enableRules = [];
+import { LOG_LEVELS } from './util';
+import Module from './module';
 
 /**
  * @typedef {Object} LogObject
@@ -42,261 +18,235 @@ var __enableRules = [];
 /**
  * @constructor
  */
-var Zerg = function () {
-    zergInstance = this;
-};
-
-/**
- * Create named Module instance
- * @param {string} moduleName - Name for log function
- * @return {Module} - Instance {@link Module}
- */
-Zerg.prototype.module = function(moduleName) {
-    var module = this.getModule(moduleName);
-
-    if (!module) {
-        module = new Module(moduleName);
-        module.enable = this.isModuleEnable(module);
-        this.__addModule(module);
+class Zerg {
+    constructor() {
+        this.__modules = [];
+        this.__transports = [];
+        this.__enableRules = [];
     }
 
-    return module;
-}
+    /**
+     * Create named Module instance
+     * @param {string} moduleName - Name for log function
+     * @return {Module} - Instance {@link Module}
+     */
+    module(moduleName) {
+        let module = this.getModule(moduleName);
 
-/**
- * @typedef {Object} Rule
- * @property {string} moduleName
- * @property {boolean} namespace
- * @property {boolean} enable
- */
-
-/**
- * @param {string} string - rule string
- * @returns {Rule} rule for module
- */
-Zerg.prototype.parseRule = function (string) {
-    var isEnable = true;
-    var isNameSpace = false;
-    var moduleName = string;
-
-    if (!moduleName) {
-        moduleName = '*';
-    }
-
-    if (moduleName.length !== 1 && moduleName[0] === '-') {
-        isEnable = false;
-        moduleName = moduleName.substring(1);
-    }
-
-    if (moduleName.length !== 1 && moduleName[moduleName.length - 1] === '*') {
-        isNameSpace = true;
-        moduleName = moduleName.substring(0, moduleName.length - 1)
-    }
-
-    return {
-        moduleName: moduleName,
-        namespace: isNameSpace,
-        enable: isEnable
-    }
-}
-
-/**
- * @param {Array.<string>} rules
- * @returns {undefined}
- */
-Zerg.prototype.enable = function (rules) {
-    __enableRules = [];
-    var rulesLen = rules.length;
-    for (var ri = 0; ri < rulesLen; ri++) {
-        var rule = this.parseRule(rules[ri]);
-        __enableRules.push(rule);
-    }
-
-    var modules = zergInstance.getModules();
-    var self = this;
-
-    Object.keys(modules).forEach(function (name) {
-        var module = modules[name];
-        module.enable = self.isModuleEnable(module);
-    });
-};
-
-
-/**
- * @param {Module} module
- * @returns {boolean} - is module enable
- */
-Zerg.prototype.isModuleEnable = function (module) {
-    var rulesCount = __enableRules.length;
-    var byDefault = false;
-
-    if (!rulesCount) {
-        return true;
-    }
-
-    for (var i = 0; i < rulesCount; i++) {
-        var rule = __enableRules[i];
-
-        // if only disable rules, enable module by default
-        if (!byDefault && !rule.enable) {
-            byDefault = true;
+        if (!module) {
+            module = new Module(moduleName, this);
+            module.enable = this.isModuleEnable(module);
+            this.__addModule(module);
         }
 
-        if (rule.moduleName === '*') {
+        return module;
+    }
+
+    /**
+     * @typedef {Object} Rule
+     * @property {string} moduleName
+     * @property {boolean} namespace
+     * @property {boolean} enable
+     */
+
+    /**
+     * @param {string} string - rule string
+     * @returns {Rule} rule for module
+     */
+    parseRule(string) {
+        let isEnable = true;
+        let isNameSpace = false;
+        let moduleName = string;
+
+        if (!moduleName) {
+            moduleName = '*';
+        }
+
+        if (moduleName.length !== 1 && moduleName[0] === '-') {
+            isEnable = false;
+            moduleName = moduleName.substring(1);
+        }
+
+        if (moduleName.length !== 1 && moduleName[moduleName.length - 1] === '*') {
+            isNameSpace = true;
+            moduleName = moduleName.substring(0, moduleName.length - 1)
+        }
+
+        return {
+            moduleName: moduleName,
+            namespace: isNameSpace,
+            enable: isEnable
+        }
+    }
+
+    /**
+     * @param {Array.<string>} rules — list of rules
+     * @returns {undefined}
+     */
+    enable(rules) {
+        this.__enableRules = [];
+        const rulesLen = rules.length;
+        for (let ri = 0; ri < rulesLen; ri++) {
+            const rule = this.parseRule(rules[ri]);
+            this.__enableRules.push(rule);
+        }
+
+        const modules = this.getModules();
+
+        Object.keys(modules).forEach((name) => {
+            const module = modules[name];
+            module.enable = this.isModuleEnable(module);
+        });
+    }
+
+    /**
+     * @param {Module} module — logger module
+     * @returns {boolean} - is module enable
+     */
+    isModuleEnable(module) {
+        const rulesCount = this.__enableRules.length;
+        let byDefault = false;
+
+        if (!rulesCount) {
             return true;
         }
 
-        if (rule.moduleName === '-') {
-            return false;
-        }
+        for (let i = 0; i < rulesCount; i++) {
+            const rule = this.__enableRules[i];
 
-        if (rule.namespace && module.name.indexOf(rule.moduleName) === 0) {
-            return rule.enable;
-        }
-
-        if (!rule.namespace && rule.moduleName === module.name) {
-            return rule.enable;
-        }
-    }
-
-    return byDefault;
-}
-
-/**
- * @param {string} moduleName - Name of {@link Module}
- * @returns {Module|boolean} - module instance or false if not exist
- */
-Zerg.prototype.getModule = function(moduleName) {
-    return __modules[moduleName] || false;
-}
-
-
-/**
- * @param {Module} module - instance {@link Module}
- * @private
- * @return {undefined}
- */
-Zerg.prototype.__addModule = function(module) {
-    __modules[module.name] = module;
-}
-
-
-/**
- * @returns {Object.<string, Module>} - all registered modules
- */
-Zerg.prototype.getModules = function() {
-    return __modules;
-}
-
-
-/**
- * @param {function} callback - Function for custom transport
- * @param {Array.<string>} [levels] - Function for custom transport
- * @return {undefined}
- */
-Zerg.prototype.addTransport = function(callback, levels) {
-    if (typeof callback !== 'function') {
-        throw new Error('addTransport: callback must be a function');
-    }
-
-    var logLevels = [];
-    if (typeof levels === 'undefined') {
-        logLevels = LOG_LEVELS;
-    } else {
-        logLevels = levels;
-    }
-
-    if (!Array.isArray(logLevels)) {
-        throw new Error('addTransport: levels must me array of string')
-    }
-
-    __transports.push({
-        callback: callback,
-        levels: logLevels
-    });
-}
-
-
-/**
- * @param {function} callback - Function with transport
- * @return {undefined}
- */
-Zerg.prototype.removeTransport = function(callback) {
-    for (var i = 0; i < __transports.length; i++) {
-        var subscriber = __transports[i];
-
-        if (subscriber.callback === callback) {
-            __transports.splice(i, 1);
-        }
-    }
-}
-
-
-Zerg.prototype.removeAllTransports = function() {
-    __transports = [];
-}
-
-
-/**
- * Propagation event for transport
- * @param {LogObject} logInfo - Just LogObject
- * @private
- * @returns {boolean} result
- */
-Zerg.prototype.__emit = function(logInfo) {
-    var subscriberCount = __transports.length;
-
-    for (var i = 0; i < subscriberCount; i++) {
-        var subscriber = __transports[i];
-        if (subscriber.levels.indexOf(logInfo.level) > -1) {
-            subscriber.callback(logInfo);
-        }
-    }
-}
-
-
-/**
- * Master function creating LogObject
- * @param {string} moduleName - {@link Module} module name
- * @param {string} level - Level of log
- * @param {string} message - Message of log
- * @param {Array.<any>} args - Extended info
- * @private
- * @return {undefined}
- */
-Zerg.prototype.__log = function(moduleName, level, message, args) {
-    var logObject = {
-        timestamp: Date.now(),
-        level: level,
-        name: moduleName,
-        message: message,
-        arguments: args
-    };
-
-    this.__emit(logObject);
-};
-
-
-/* eslint valid-jsdoc: ["error", { "requireParamDescription": false }] */
-
-/**
- * @param {string} loggerName
- * @constructor
- */
-var Module = function(loggerName) {
-    var self = this;
-    self.name = loggerName;
-    self.enable = true;
-
-    LOG_LEVELS.forEach(function (level) {
-        self[level] = function (message) {
-            if (!self.enable) {
-                return;
+            // if only disable rules, enable module by default
+            if (!byDefault && !rule.enable) {
+                byDefault = true;
             }
-            var args = Array.prototype.slice.call(arguments, 1);
-            zergInstance.__log(self.name, level, message, args);
-        }
-    });
-};
 
-module.exports = new Zerg();
+            if (rule.moduleName === '*') {
+                return true;
+            }
+
+            if (rule.moduleName === '-') {
+                return false;
+            }
+
+            if (rule.namespace && module.name.indexOf(rule.moduleName) === 0) {
+                return rule.enable;
+            }
+
+            if (!rule.namespace && rule.moduleName === module.name) {
+                return rule.enable;
+            }
+        }
+
+        return byDefault;
+    }
+
+    /**
+     * @param {string} moduleName - Name of {@link Module}
+     * @returns {Module|boolean} - module instance or false if not exist
+     */
+    getModule(moduleName) {
+        return this.__modules[moduleName] || false;
+    }
+
+    /**
+     * @param {Module} module - instance {@link Module}
+     * @private
+     * @return {undefined}
+     */
+    __addModule(module) {
+        this.__modules[module.name] = module;
+    }
+
+    /**
+     * @returns {Object.<string, Module>} - all registered modules
+     */
+    getModules() {
+        return this.__modules;
+    }
+
+    /**
+     * @param {function} callback - Function for custom transport
+     * @param {Array.<string>} [levels] - Function for custom transport
+     * @return {undefined}
+     */
+    addTransport(callback, levels) {
+        if (typeof callback !== 'function') {
+            throw new Error('addTransport: callback must be a function');
+        }
+
+        let logLevels = [];
+        if (typeof levels === 'undefined') {
+            logLevels = LOG_LEVELS;
+        } else {
+            logLevels = levels;
+        }
+
+        if (!Array.isArray(logLevels)) {
+            throw new Error('addTransport: levels must me array of string')
+        }
+
+        this.__transports.push({
+            callback: callback,
+            levels: logLevels
+        });
+    }
+
+    /**
+     * @param {function} callback - Function with transport
+     * @return {undefined}
+     */
+    removeTransport(callback) {
+        for (let i = 0; i < this.__transports.length; i++) {
+            const subscriber = this.__transports[i];
+
+            if (subscriber.callback === callback) {
+                this.__transports.splice(i, 1);
+            }
+        }
+    }
+
+    removeAllTransports() {
+        this.__transports = [];
+    }
+
+    /**
+     * Propagation event for transport
+     * @param {LogObject} logInfo - Just LogObject
+     * @private
+     * @returns {boolean} result
+     */
+    __emit(logInfo) {
+        const subscriberCount = this.__transports.length;
+
+        for (let i = 0; i < subscriberCount; i++) {
+            const subscriber = this.__transports[i];
+            if (subscriber.levels.indexOf(logInfo.level) > -1) {
+                subscriber.callback(logInfo);
+            }
+        }
+    }
+
+    /**
+     * Master function creating LogObject
+     * @param {string} moduleName - {@link Module} module name
+     * @param {string} level - Level of log
+     * @param {string} message - Message of log
+     * @param {Array.<any>} args - Extended info
+     * @private
+     * @return {undefined}
+     */
+    __log(moduleName, level, message, args) {
+        const logObject = {
+            timestamp: Date.now(),
+            level: level,
+            name: moduleName,
+            message: message,
+            arguments: args
+        };
+
+        this.__emit(logObject);
+    }
+}
+
+export const zerg = new Zerg();
+
+export default Zerg;

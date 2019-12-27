@@ -1,13 +1,6 @@
-'use strict';
-
-var LOG_LEVELS = require('./util').LOG_LEVELS;
-var merge = require('./util').merge;
-
-/**
- * @type {Zerg}
- */
-var zerg = require('./core');
-var transport = require('./transport');
+import { LOG_LEVELS, merge } from './util';
+import { zerg } from './core';
+import transport from './transport';
 
 zerg.addTransport(transport.console);
 
@@ -17,7 +10,7 @@ zerg.addTransport(transport.console);
  * @return {undefined}
  */
 zerg.config = function (opt) {
-    var options = merge({
+    const options = merge({
         console: true,
         consoleLevels: LOG_LEVELS
     }, opt || {});
@@ -29,6 +22,6 @@ zerg.config = function (opt) {
             zerg.addTransport(transport.console, options.consoleLevels);
         }
     }
-}
+};
 
-module.exports = zerg;
+export default zerg;

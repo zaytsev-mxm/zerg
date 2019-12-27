@@ -1,5 +1,3 @@
-'use strict';
-
 /* eslint
  no-console: "off",
  no-unused-expressions: "off",
@@ -19,8 +17,8 @@ var sinonChai = require('sinon-chai');
 
 chai.use(sinonChai);
 
-var consoleNode = require('../src/transport/consoleNode');
-var consoleBrowser = require('../src/transport/consoleBrowser');
+var consoleNode = require('../lib/transport/consoleNode');
+var consoleBrowser = require('../lib/transport/consoleBrowser');
 var consoleLogOrigin = console.log;
 
 describe('console', function () {
@@ -48,17 +46,17 @@ describe('console', function () {
         });
 
         it('should required consoleBrowser', function () {
-            delete require.cache[require.resolve('../src/transport')];
+            delete require.cache[require.resolve('../lib/transport')];
             global.window = true;
-            var transport = require('../src/transport');
-            var consoleBrowser = require('../src/transport/consoleBrowser');
+            var transport = require('../lib/transport');
+            var consoleBrowser = require('../lib/transport/consoleBrowser');
             expect(transport.console).equal(consoleBrowser);
         });
 
         it('should required consoleNode', function () {
-            delete require.cache[require.resolve('../src/transport')];
-            var transport = require('../src/transport');
-            var consoleNode = require('../src/transport/consoleNode');
+            delete require.cache[require.resolve('../lib/transport')];
+            var transport = require('../lib/transport');
+            var consoleNode = require('../lib/transport/consoleNode');
             expect(transport.console).equal(consoleNode);
         });
     });

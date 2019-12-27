@@ -6,3 +6,5 @@ test.js
 config/local.json
 npm-debug.log
 coverage
+yarn.lock
+lib

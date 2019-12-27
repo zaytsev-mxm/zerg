@@ -187,7 +187,7 @@
         "object-curly-newline": "error",
         "object-curly-spacing": [
             "error",
-            "never"
+            "always"
         ],
         "object-property-newline": "error",
         "object-shorthand": "off",
@@ -218,7 +218,6 @@
                 "before": false
             }
         ],
-        "sort-imports": "error",
         "sort-vars": "error",
         "space-before-blocks": "error",
         "space-before-function-paren": "off",
@@ -246,5 +245,8 @@
             "error",
             "never"
         ]
+    },
+    "parserOptions": {
+        "sourceType": "module"
     }
 }

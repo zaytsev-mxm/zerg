@@ -1,10 +1,8 @@
-'use strict';
-
 var describe = require('mocha').describe;
 var expect = require('chai').expect;
 var it = require('mocha').it;
-var merge = require('../src/util.js').merge;
-var LOG_LEVELS = require('../src/util.js').LOG_LEVELS;
+var merge = require('../lib/util.js').merge;
+var LOG_LEVELS = require('../lib/util.js').LOG_LEVELS;
 
 describe('util', function () {
     describe('merge', function () {
